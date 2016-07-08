@@ -1,42 +1,50 @@
+//FUNCTION USED TO BINDING TO DOM NODES
+const getDomNodes = (parentElement) => {
+  return [
+    parentElement.querySelector('.Factorial-Result-Metric-Value'),
+    parentElement.querySelector('.Factorial-Result-Metric-Time'),
+    parentElement.querySelector('.Factorial-Result-Output'),
+    parentElement.querySelector('.Factorial-Result-Metric-Length')
+  ];
+}
+
+//FUNCTION UPDATE DOM NODES
+const updateDomNodes = (data, parent) => {
+  const [valueNode, timeNode, outputNode, lengthNode] = getDomNodes(parent);
+  valueNode.innerHTML = data.value;
+  timeNode.innerHTML = data.time;
+  outputNode.innerHTML = data.result;
+  if (lengthNode) {
+    lengthNode.innerHTML = data.length;
+  }
+}
+
 //SETUP SIMPLE WORKER
 const workerFactorialSimple = new Worker('factorialSimple.js');
-const [simpleValue, simpleTime, simpleOutput] = getDomNodes(document.getElementById('Factorial-Simple'));
-workerFactorialSimple.onmessage = function(e) {
-	simpleValue.innerHTML = e.data.value;
-	simpleTime.innerHTML = e.data.time;
-	simpleOutput.innerHTML = e.data.result;
+const factorialSimpleNode = window['Factorial-Simple'];
+workerFactorialSimple.onmessage = (e) => {
+  updateDomNodes(e.data, factorialSimpleNode);
 }
 
 //SETUP COMPLEX WORKER
 const workerFactorialComplex = new Worker('factorialComplex.js');
-const [complexValue, complexTime, complexOutput, complexLength] = getDomNodes(document.getElementById('Factorial-Complex'));
-workerFactorialComplex.onmessage = function(e) {
-	complexValue.innerHTML = e.data.value;
-	complexTime.innerHTML = e.data.time;
-	complexLength.innerHTML = e.data.length;
-	complexOutput.innerHTML = e.data.result;
+const factorialComplexNode = window['Factorial-Complex'];
+workerFactorialComplex.onmessage = (e) => {
+  button.disabled = false;
+  updateDomNodes(e.data, factorialComplexNode);
 }
 
 //SETUP INPUT KEY UP BINDING
-const input = document.getElementById('Factorial-Input');
-input.onkeyup = function() {
-	const value = input.value;
-	const intValue = parseInt(value, 10);
-	if (String(intValue) === value) {
-		const reset = {data: {value: value, result: 'Calculating...', time: '...', length: '...'}};
-		workerFactorialSimple.onmessage(reset);
-	  	workerFactorialSimple.postMessage(intValue);
-		workerFactorialComplex.onmessage(reset);
-	  	workerFactorialComplex.postMessage(intValue);
-	}
-}
-
-//FUNCTION USED TO BINDING TO DOM NODES
-function getDomNodes(parentElement) {
-	return [
-		parentElement.getElementsByClassName('Factorial-Result-Metric-Value')[0],
-		parentElement.getElementsByClassName('Factorial-Result-Metric-Time')[0],
-		parentElement.getElementsByClassName('Factorial-Result-Output')[0],
-		parentElement.getElementsByClassName('Factorial-Result-Metric-Length')[0]
-	];
+const input = window['Factorial-Input'];
+const button = window['Factorial-Button'];
+button.onclick = () => {
+  const intValue = parseInt(input.value, 10);
+  if (~~input.value === intValue) {
+    const data = {value: intValue, result: 'Calculating...', time: '...', length: '...'};
+    button.disabled = true;
+    updateDomNodes(data, factorialSimpleNode);
+    updateDomNodes(data, factorialComplexNode);
+    workerFactorialSimple.postMessage(intValue);
+    workerFactorialComplex.postMessage(intValue);
+  }
 }
